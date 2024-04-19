@@ -1,0 +1,46 @@
+# This configuration is intended for development purpose, it's **your** responsibility to harden it for production
+name: xprojectazesample
+services:
+  app:
+    image: xprojectazesample
+    environment:
+      - _JAVA_OPTIONS=-Xmx512m -Xms256m
+      - SPRING_PROFILES_ACTIVE=prod,api-docs
+      - MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED=true
+      - SPRING_CLOUD_CONSUL_HOST=consul
+      - SPRING_CLOUD_CONSUL_PORT=8500
+      - SPRING_DATASOURCE_URL=jdbc:mariadb://mariadb:3306/xprojectazesample?useLegacyDatetimeCode=false
+      - SPRING_LIQUIBASE_URL=jdbc:mariadb://mariadb:3306/xprojectazesample?useLegacyDatetimeCode=false
+      - SPRING_ELASTICSEARCH_URIS=http://elasticsearch:9200
+    ports:
+      - 127.0.0.1:8585:8585
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8585/management/health
+      interval: 5s
+      timeout: 5s
+      retries: 40
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+  mariadb:
+    extends:
+      file: ./mariadb.yml
+      service: mariadb
+  elasticsearch:
+    extends:
+      file: ./elasticsearch.yml
+      service: elasticsearch
+  consul:
+    extends:
+      file: ./consul.yml
+      service: consul
+  consul-config-loader:
+    extends:
+      file: ./consul.yml
+      service: consul-config-loader
